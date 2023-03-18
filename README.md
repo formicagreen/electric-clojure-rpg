@@ -1,3 +1,1 @@
-# Painter — Electric Clojure
-
-![screenshot](screenshot.png)
+# Electric Clojure RPG
