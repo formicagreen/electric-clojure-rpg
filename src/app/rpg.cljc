@@ -181,7 +181,7 @@
                                 :z-index "1"
                                 :padding "10px"
                                 :font-size "calc(var(--tile-size) / 3)"
-                                :line-height "50%"
+                                :line-height "0"
                                 :border "5px groove #ccc"
                                 :border-bottom-left-radius "0"
                                 :transition "all 0.1s ease-in-out"})
