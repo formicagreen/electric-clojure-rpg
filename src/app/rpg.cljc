@@ -153,7 +153,7 @@
   (ui/input
    (get-in users [session-id :message])
    (e/fn [v] (e/server
-              (swap! !users assoc-in [session-id :message] v))f)
+              (swap! !users assoc-in [session-id :message] v)))
    (dom/props {:maxlength "9"
                :id "message-box"
                :placeholder "type something !"
