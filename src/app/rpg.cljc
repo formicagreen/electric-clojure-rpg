@@ -57,49 +57,49 @@
            [:w :w :w :w :w :w :w :w :w]]})
 
 (def doors
-  {:outside [{:position [12 5]
-              :background "url(door.png)"
-              :destination {:room :house1 :position [4 8]}}
-             {:position [2 3]
-              :background "url(door.png)"
-              :destination {:room :house2 :position [4 4]}}]
-   :house1  [{:position [4 8]
-              :background "url(door.png)"
-              :destination {:room :outside :position [12 5]}}
-             {:position [3 3]
-              :background "url(escalator-down.png)"
-              :destination {:room :cave1 :position [4 4]}}
-             {:position [0 0]
-              :background "url(escalator-down.png)"
-              :destination {:room :tunnel1 :position [11 2]}}]
+  {:outside [{:pos [12 5]
+              :bg "url(door.png)"
+              :dest {:room :house1 :pos [4 8]}}
+             {:pos [2 3]
+              :bg "url(door.png)"
+              :dest {:room :house2 :pos [4 4]}}]
+   :house1  [{:pos [4 8]
+              :bg "url(door.png)"
+              :dest {:room :outside :pos [12 5]}}
+             {:pos [3 3]
+              :bg "url(escalator-down.png)"
+              :dest {:room :cave1 :pos [4 4]}}
+             {:pos [0 0]
+              :bg "url(escalator-down.png)"
+              :dest {:room :tunnel1 :pos [11 2]}}]
 
-   :house2  [{:position [4 4]
-              :background "url(door.png)"
-              :destination {:room :outside :position [2 3]}}
-             {:position [0 0]
-              :background "url(escalator-down.png)"
-              :destination {:room :tunnel1 :position [0 1]}}]
+   :house2  [{:pos [4 4]
+              :bg "url(door.png)"
+              :dest {:room :outside :pos [2 3]}}
+             {:pos [0 0]
+              :bg "url(escalator-down.png)"
+              :dest {:room :tunnel1 :pos [0 1]}}]
    
-   :tunnel1 [{:position [11 2]
-              :background "url(escalator-down.png)"
-              :destination {:room :house1 :position [0 0]}}
-             {:position [0 1]
-              :background "url(escalator-down.png)"
-              :destination {:room :house2 :position [0 0]}}]
+   :tunnel1 [{:pos [11 2]
+              :bg "url(escalator-down.png)"
+              :dest {:room :house1 :pos [0 0]}}
+             {:pos [0 1]
+              :bg "url(escalator-down.png)"
+              :dest {:room :house2 :pos [0 0]}}]
 
-   :cave1 [{:position [4 4]
-            :background "url(escalator-down.png)"
-            :destination {:room :house1 :position [3 3]}}]})
+   :cave1 [{:pos [4 4]
+            :bg "url(escalator-down.png)"
+            :dest {:room :house1 :pos [3 3]}}]})
 
-(defn room-dimensions [room-id]
-  (let [room (get rooms room-id)]
+(defn room-dimensions [room-kw]
+  (let [room (get rooms room-kw)]
     [(count (first room)) (count room)]))
 
 (tests
   (room-dimensions :outside) := [16 16])
 
-(defn get-tile [x y room]
-  (-> (get rooms room)
+(defn get-tile [x y room-kw]
+  (-> (get rooms room-kw)
       (get y)
       (get x)))
 
@@ -118,9 +118,9 @@
         [x y]
         (recur (rand-int w) (rand-int h))))))
 
-(defn get-door [x y room-id]
-  (->> (get doors room-id)
-       (filter #(= (:position %) [x y]))
+(defn get-door [x y room-kw]
+  (->> (get doors room-kw)
+       (filter #(= (:pos %) [x y]))
        first))
 
 (tests 
@@ -128,7 +128,7 @@
   (some? #(get-door 12 5 :outside)) := true)
 
 (defn update-position [user key]
-  (let [[x y] (:position user)
+  (let [[x y] (:pos user)
         new-x (case key
                 "ArrowLeft" (dec x)
                 "ArrowRight" (inc x)
@@ -141,23 +141,23 @@
     (if door
       ; Warp
       (-> user
-          (assoc :position (get-in door [:destination :position]))
-          (assoc :room (get-in door [:destination :room])))
+          (assoc :pos (get-in door [:dest :pos]))
+          (assoc :room (get-in door [:dest :room])))
       (if (tile-walkable? new-x new-y (:room user))
         ; Move
-        (assoc user :position [new-x new-y])
+        (assoc user :pos [new-x new-y])
         ; Do nothing
         user))))
 
 (tests
- (update-position {:position [0 0] :room :outside} "ArrowLeft") := {:position [0 0] :room :outside}
- (update-position {:position [0 0] :room :outside} "ArrowRight") := {:position [1 0] :room :outside}
- (update-position {:position [12 6] :room :outside} "ArrowUp") := {:position [4 8] :room :house1}
+ (update-position {:pos [0 0] :room :outside} "ArrowLeft") := {:pos [0 0] :room :outside}
+ (update-position {:pos [0 0] :room :outside} "ArrowRight") := {:pos [1 0] :room :outside}
+ (update-position {:pos [12 6] :room :outside} "ArrowUp") := {:pos [4 8] :room :house1}
  )
 
 (e/defn User [[k v]] 
   (when (= (:room v) (:room (get users session-id)))
-    (let [[x y] (:position v)]
+    (let [[x y] (:pos v)]
       (dom/div
        (dom/props {:class "absolute !bg-cover center transition-all grid place-items-center"})
        (dom/style {:width "var(--tile-size)"
@@ -180,10 +180,10 @@
          (dom/text (:message v)))))))
 
 (e/defn Door [door]
-  (let [[x y] (:position door)]
+  (let [[x y] (:pos door)]
     (dom/div
      (dom/props {:class "absolute !bg-cover"})
-     (dom/style {:background (:background door)
+     (dom/style {:background (:bg door)
                  :width "var(--tile-size)"
                  :height "var(--tile-size)"
                  :left (str "calc(" x " * var(--tile-size))")
@@ -246,13 +246,12 @@
    (Message-box.))
   ; Detect when user joins/leaves
   (e/server
-   (swap! !users assoc session-id {:position (random-free-tile :outside)
+   (swap! !users assoc session-id {:pos (random-free-tile :outside)
                                    :room :outside})
    (e/on-unmount #(swap! !users dissoc session-id)))
   ; Keyboard handler
   (dom/on "keydown" (e/fn [e]
-                      (let [key (.-key e)
-                            user (get users session-id)]
+                      (let [key (.-key e)]
                         (if (contains? #{"ArrowLeft" "ArrowRight" "ArrowUp" "ArrowDown"} key)
                           (do
                             (.blur (.getElementById js/document "message-box"))
