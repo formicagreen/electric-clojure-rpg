@@ -152,7 +152,7 @@
 (tests
  (update-position {:position [0 0] :room :outside} "ArrowLeft") := {:position [0 0] :room :outside}
  (update-position {:position [0 0] :room :outside} "ArrowRight") := {:position [1 0] :room :outside}
- (update-position {:position [12 4] :room :outside} "ArrowUp") := {:position [4 8] :room :house1}
+ (update-position {:position [12 6] :room :outside} "ArrowUp") := {:position [4 8] :room :house1}
  )
 
 (e/defn User [[k v]] 
