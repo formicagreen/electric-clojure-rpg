@@ -15,3 +15,4 @@ target/*
 .DS_Store
 .calva/*
 *.log
+resources/public/output.css

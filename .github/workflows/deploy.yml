@@ -1,0 +1,20 @@
+name: Deploy to Fly
+on:
+  push:
+    branches:
+      - "master"
+  pull_request:
+jobs:
+  deploy:
+    name: Deploy to Fly.io
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: npm ci
+      - run: npm run build --if-present
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: NO_COLOR=1 flyctl deploy --build-arg VERSION=$(git describe --tags --long --always --dirty) --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+    image-rendering: pixelated;
+}
+
+@media screen and (orientation: portrait) {
+    :root {
+        --tile-size: 6vw;
+    }
+}
+
+@media screen and (orientation: landscape) {
+    :root {
+        --tile-size: 6vh;
+    }
+}
+
+@font-face {
+    font-family: 'senor-saturno';
+    src: url('SenorSaturno-Aw9g.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.pixel-shadow {
+    box-shadow: -4px 0 0 0 #393939,
+        4px 0 0 0 #393939,
+        0 -4px 0 0 #393939,
+        0 4px 0 0 #393939;
+}
