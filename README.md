@@ -2,7 +2,7 @@
 
 Step into the Metaverse!!!
 
-1. Start the electric server `clj -A:dev -X user/main`
-2. Start Tailwind ` npm run dev`
+1. Start Tailwind `npm run dev`
+2. Start the electric server `clj -A:dev -X user/main`
 
 ![Screenshot](screenshot.png)
