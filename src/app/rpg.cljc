@@ -3,7 +3,8 @@
   (:require [hyperfiddle.electric :as e]
             [hyperfiddle.electric-dom2 :as dom]
             [hyperfiddle.api :as hf]
-            [hyperfiddle.electric-ui4 :as ui]))
+            [hyperfiddle.electric-ui4 :as ui]
+            [hyperfiddle.rcf :refer [tests]]))
 
 #?(:clj (def !users (atom {})))
 
@@ -94,10 +95,17 @@
   (let [room (get rooms room-id)]
     [(count (first room)) (count room)]))
 
+(tests
+  (room-dimensions :outside) := [16 16])
+
 (defn get-tile [x y room]
   (-> (get rooms room)
       (get y)
       (get x)))
+
+(tests
+ (get-tile 0 0 :outside) := :g
+ (get-tile -1 0 :outside) := nil)
 
 (defn tile-walkable? [x y room]
   (contains? #{:g :f :u} (get-tile x y room)))
@@ -109,6 +117,43 @@
       (if (tile-walkable? x y room)
         [x y]
         (recur (rand-int w) (rand-int h))))))
+
+(defn get-door [x y room-id]
+  (->> (get doors room-id)
+       (filter #(= (:position %) [x y]))
+       first))
+
+(tests 
+  (get-door 0 0 :outside) := nil
+  (some? #(get-door 12 5 :outside)) := true)
+
+(defn update-position [user key]
+  (let [[x y] (:position user)
+        new-x (case key
+                "ArrowLeft" (dec x)
+                "ArrowRight" (inc x)
+                x)
+        new-y (case key
+                "ArrowUp" (dec y)
+                "ArrowDown" (inc y)
+                y)
+        door (get-door new-x new-y (:room user))]
+    (if door
+      ; Warp
+      (-> user
+          (assoc :position (get-in door [:destination :position]))
+          (assoc :room (get-in door [:destination :room])))
+      (if (tile-walkable? new-x new-y (:room user))
+        ; Move
+        (assoc user :position [new-x new-y])
+        ; Do nothing
+        user))))
+
+(tests
+ (update-position {:position [0 0] :room :outside} "ArrowLeft") := {:position [0 0] :room :outside}
+ (update-position {:position [0 0] :room :outside} "ArrowRight") := {:position [1 0] :room :outside}
+ (update-position {:position [12 4] :room :outside} "ArrowUp") := {:position [4 8] :room :house1}
+ )
 
 (e/defn User [[k v]] 
   (when (= (:room v) (:room (get users session-id)))
@@ -134,20 +179,22 @@
                      :max-width "calc(var(--tile-size) * 4)"})
          (dom/text (:message v)))))))
 
+(e/defn Door [door]
+  (let [[x y] (:position door)]
+    (dom/div
+     (dom/props {:class "absolute !bg-cover"})
+     (dom/style {:background (:background door)
+                 :width "var(--tile-size)"
+                 :height "var(--tile-size)"
+                 :left (str "calc(" x " * var(--tile-size))")
+                 :top (str "calc(" y " * var(--tile-size))")}))))
+
 (e/defn Sprites []
   (dom/div
    (e/for [door (get doors (:room (get users session-id)))]
-     (let [[x y] (:position door)]
-       (dom/div 
-        (dom/props {:class "absolute !bg-cover transition-all"}) 
-        (dom/style {:background (:background door)
-                    :width "var(--tile-size)"
-                    :height "var(--tile-size)"
-                    :left (str "calc(" x " * var(--tile-size))")
-                    :top (str "calc(" y " * var(--tile-size))")}))))
+     (Door. door))
    (e/for-by key [user users]
-             (User. user)
-             )))
+             (User. user))))
 
 (e/defn Message-box []
   (ui/input
@@ -204,29 +251,11 @@
    (e/on-unmount #(swap! !users dissoc session-id)))
   ; Keyboard handler
   (dom/on "keydown" (e/fn [e]
-                      (let [key (.-key e)]
+                      (let [key (.-key e)
+                            user (get users session-id)]
                         (if (contains? #{"ArrowLeft" "ArrowRight" "ArrowUp" "ArrowDown"} key)
                           (do
                             (.blur (.getElementById js/document "message-box"))
                             (e/server
-                             (let [[x y] (:position (get @!users session-id))
-                                   next-x (case key
-                                            "ArrowLeft" (dec x)
-                                            "ArrowRight" (inc x)
-                                            x)
-                                   next-y (case key
-                                            "ArrowUp" (dec y)
-                                            "ArrowDown" (inc y)
-                                            y)]
-                               (let [door (first (filter #(= [next-x next-y] (:position %))
-                                                         (get doors (:room (get @!users session-id)))))]
-                                 (if door
-                                   (swap! !users #(-> %
-                                                      (assoc-in [session-id :room] (get-in door [:destination :room]))
-                                                      (assoc-in [session-id :position] (get-in door [:destination :position]))))
-                                   (when
-                                    (tile-walkable? next-x next-y (:room (get @!users session-id)))
-                                     (swap! !users assoc-in
-                                            [session-id :position]
-                                            [next-x next-y])))))))
+                             (swap! !users update session-id update-position key)))
                           (.focus (.getElementById js/document "message-box")))))))
