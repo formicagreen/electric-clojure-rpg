@@ -96,8 +96,8 @@
 
 (defn get-tile [x y room]
   (-> (get rooms room)
-      (nth y)
-      (nth x)))
+      (get y)
+      (get x)))
 
 (defn tile-walkable? [x y room]
   (contains? #{:g :f :u} (get-tile x y room)))
