@@ -139,12 +139,12 @@
                 y)
         door (get-door new-x new-y (:room user))]
     (if door
-      ; Warp
+      ; Go through door
       (-> user
           (assoc :pos (get-in door [:dest :pos]))
           (assoc :room (get-in door [:dest :room])))
       (if (tile-walkable? new-x new-y (:room user))
-        ; Move
+        ; Move to new position
         (assoc user :pos [new-x new-y])
         ; Do nothing
         user))))
