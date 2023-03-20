@@ -155,29 +155,28 @@
  (update-position {:pos [12 6] :room :outside} "ArrowUp") := {:pos [4 8] :room :house1}
  )
 
-(e/defn User [[k v]] 
-  (when (= (:room v) (:room (get users session-id)))
-    (let [[x y] (:pos v)]
-      (dom/div
-       (dom/props {:class "absolute !bg-cover center transition-all grid place-items-center"})
-       (dom/style {:width "var(--tile-size)"
-                   :height "var(--tile-size)"
-                   :background "url(player.png)"
-                   :left (str "calc(" x " * var(--tile-size))")
-                   :top (str "calc(" y " * var(--tile-size))")
-                   :filter (str "hue-rotate(" (mod (hash k) 360) "deg)")
-                   :line-height "var(--tile-size)"}))
-      (when
-       (not-empty (:message v))
+(e/defn User [[k v]]
+  (let [[x y] (:pos v)]
+    (dom/div
+     (dom/props {:class "absolute !bg-cover center transition-all grid place-items-center"})
+     (dom/style {:width "var(--tile-size)"
+                 :height "var(--tile-size)"
+                 :background "url(player.png)"
+                 :left (str "calc(" x " * var(--tile-size))")
+                 :top (str "calc(" y " * var(--tile-size))")
+                 :filter (str "hue-rotate(" (mod (hash k) 360) "deg)")
+                 :line-height "var(--tile-size)"}))
+    (when
+     (not-empty (:message v))
         ; Message bubble
-        (dom/div
-         (dom/props {:class "absolute overflow-hidden bg-white text-center z-20 transition-all
+      (dom/div
+       (dom/props {:class "absolute overflow-hidden bg-white text-center z-20 transition-all
                               whitespace-nowrap px-2 pixel-shadow"})
-         (dom/style {:font-size "calc(var(--tile-size) / 3)"
-                     :left (str "calc(" x " * var(--tile-size) + var(--tile-size))")
-                     :top (str "calc(" y " * var(--tile-size) - var(--tile-size) / 2)")
-                     :max-width "calc(var(--tile-size) * 4)"})
-         (dom/text (:message v)))))))
+       (dom/style {:font-size "calc(var(--tile-size) / 3)"
+                   :left (str "calc(" x " * var(--tile-size) + var(--tile-size))")
+                   :top (str "calc(" y " * var(--tile-size) - var(--tile-size) / 2)")
+                   :max-width "calc(var(--tile-size) * 4)"})
+       (dom/text (:message v))))))
 
 (e/defn Door [door]
   (let [[x y] (:pos door)]
@@ -190,11 +189,13 @@
                  :top (str "calc(" y " * var(--tile-size))")}))))
 
 (e/defn Sprites []
-  (dom/div
-   (e/for [door (get doors (:room (get users session-id)))]
-     (Door. door))
-   (e/for-by key [user users]
-             (User. user))))
+  (let [room-kw (:room (get users session-id))]
+    (dom/div
+     (e/for [door (get doors room-kw)]
+       (Door. door))
+     (e/for-by key [user users]
+               (when (= (:room (val user)) room-kw)
+                 (User. user))))))
 
 (e/defn Message-box []
   (ui/input
