@@ -2,7 +2,8 @@
 
   (:require [hyperfiddle.electric :as e]
             [hyperfiddle.electric-dom2 :as dom]
-            [hyperfiddle.api :as hf]))
+            [hyperfiddle.api :as hf]
+            [hyperfiddle.electric-ui4 :as ui]))
 
 #?(:clj (def !users (atom {})))
 
@@ -149,20 +150,18 @@
              )))
 
 (e/defn Message-box []
-  (dom/input
-   (dom/style {:width "calc(var(--tile-size) * 6)"
-               :height "var(--tile-size)"
-               :font-size "calc(var(--tile-size) / 2)"})
-             (dom/props {:maxlength "9"
-                         :id "message-box"
-                         :placeholder "type something !"
-                         :value (get-in users [session-id :message])
-                         :class "absolute left-4 bottom-4 bg-white p-4 pixel-shadow outline-none"})
-             (dom/on "input" (e/fn [e]
-                               (let [target (.-target e)
-                                     value (.-value target)]
-                                 (e/server
-                                  (swap! !users assoc-in [session-id :message] value)))))))
+  (ui/input
+   (get-in users [session-id :message])
+   (e/fn [v] (e/server
+              (swap! !users assoc-in [session-id :message] v))f)
+   (dom/props {:maxlength "9"
+               :id "message-box"
+               :placeholder "type something !"
+               :value (get-in users [session-id :message])
+               :class "absolute left-4 bottom-4 bg-white p-4 pixel-shadow outline-none"
+               :style {:width "calc(var(--tile-size) * 6)"
+                       :height "var(--tile-size)"
+                       :font-size "calc(var(--tile-size) / 2)"}})))
 
 (e/defn Map []
   (dom/div
