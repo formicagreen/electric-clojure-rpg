@@ -72,21 +72,18 @@
              {:pos [0 0]
               :bg "url(escalator-down.png)"
               :dest {:room :tunnel1 :pos [11 2]}}]
-
    :house2  [{:pos [4 4]
               :bg "url(door.png)"
               :dest {:room :outside :pos [2 3]}}
              {:pos [0 0]
               :bg "url(escalator-down.png)"
               :dest {:room :tunnel1 :pos [0 1]}}]
-   
    :tunnel1 [{:pos [11 2]
               :bg "url(escalator-down.png)"
               :dest {:room :house1 :pos [0 0]}}
              {:pos [0 1]
               :bg "url(escalator-down.png)"
               :dest {:room :house2 :pos [0 0]}}]
-
    :cave1 [{:pos [4 4]
             :bg "url(escalator-down.png)"
             :dest {:room :house1 :pos [3 3]}}]})
@@ -251,11 +248,13 @@
                                    :room :outside})
    (e/on-unmount #(swap! !users dissoc session-id)))
   ; Keyboard handler
-  (dom/on "keydown" (e/fn [e]
-                      (let [key (.-key e)]
-                        (if (contains? #{"ArrowLeft" "ArrowRight" "ArrowUp" "ArrowDown"} key)
-                          (do
-                            (.blur (.getElementById js/document "message-box"))
-                            (e/server
-                             (swap! !users update session-id update-position key)))
-                          (.focus (.getElementById js/document "message-box")))))))
+  (dom/on "keydown"
+          (e/fn [e]
+            (let [key (.-key e)
+                  message-box (.getElementById js/document "message-box")]
+              (if (contains? #{"ArrowLeft" "ArrowRight" "ArrowUp" "ArrowDown"} key)
+                (do
+                  (.blur message-box)
+                  (e/server
+                   (swap! !users update session-id update-position key)))
+                (.focus message-box))))))
