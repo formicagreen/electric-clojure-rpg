@@ -202,7 +202,6 @@
    (dom/props {:maxlength "9"
                :id "message-box"
                :placeholder "type something !"
-               :value (get-in users [session-id :message])
                :class "absolute left-4 bottom-4 bg-white p-4 pixel-shadow outline-none"
                :style {:width "calc(var(--tile-size) * 6)"
                        :height "var(--tile-size)"
